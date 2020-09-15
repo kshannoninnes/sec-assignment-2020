@@ -1,3 +1,9 @@
+package Core;
+
+import Interfaces.ArenaListener;
+import Interfaces.UserInterface;
+import Models.Entity;
+import Models.Position;
 import javafx.scene.canvas.*;
 import javafx.geometry.VPos;
 import javafx.scene.image.Image;
@@ -5,69 +11,53 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
-import java.io.InputStream;
 import java.util.*;
 
 /**
  * A JavaFX GUI element that displays a grid on which you can draw images, text and lines.
  */
-public class JFXArena extends Pane
+public class JFXArena extends Pane implements UserInterface
 {
-    // Represents the image to draw. You can modify this to introduce multiple images.
-    private static final String IMAGE_FILE = "1554047213.png";
-    private Image robot1;
-    
     // The following values are arbitrary, and you may need to modify them according to the 
     // requirements of your application.
-    private int gridWidth = 9;
-    private int gridHeight = 9;
-    private double robotX = 1.0;
-    private double robotY = 3.0;
+    private int gridWidth;
+    private int gridHeight ;
 
     private double gridSquareSize; // Auto-calculated
     private Canvas canvas; // Used to provide a 'drawing surface'.
 
     private List<ArenaListener> listeners = null;
+    private List<Entity> activeEntities;
     
     /**
      * Creates a new arena object, loading the robot image and initialising a drawing surface.
      */
-    public JFXArena()
+    public JFXArena(int gridHeight, int gridWidth)
     {
-        // Here's how you get an Image object from an image file (which you provide in the 
-        // 'resources/' directory).
-        
-        InputStream is = getClass().getClassLoader().getResourceAsStream(IMAGE_FILE);
-        if(is == null)
-        {
-            throw new AssertionError("Cannot find image file " + IMAGE_FILE);
-        }
-        robot1 = new Image(is);
+        this.gridHeight = gridHeight;
+        this.gridWidth = gridWidth;
         
         canvas = new Canvas();
         canvas.widthProperty().bind(widthProperty());
         canvas.heightProperty().bind(heightProperty());
         getChildren().add(canvas);
+
+        activeEntities = Collections.synchronizedList(new LinkedList<>());
     }
-    
-    
-    /**
-     * Moves a robot image to a new grid position. This is highly rudimentary, as you will need
-     * many different robots in practice. This method currently just serves as a demonstration.
-     */
-    public void setRobotPosition(double x, double y)
+
+    @Override
+    public void renderEntities(List<Entity> entities)
     {
-        robotX = x;
-        robotY = y;
+        activeEntities = entities;
         requestLayout();
     }
     
     /**
      * Adds a callback for when the user clicks on a grid square within the arena. The callback 
-     * (of type ArenaListener) receives the grid (x,y) coordinates as parameters to the 
+     * (of type Interfaces.ArenaListener) receives the grid (x,y) coordinates as parameters to the
      * 'squareClicked()' method.
      */
-    public void addListener(ArenaListener newListener)
+    public void addSquareClickedListener(ArenaListener newListener)
     {
         if(listeners == null)
         {
@@ -133,8 +123,13 @@ public class JFXArena extends Pane
 
         // Invoke helper methods to draw things at the current location.
         // ** You will need to adapt this to the requirements of your application. **
-        drawImage(gfx, robot1, robotX, robotY);
-        drawLabel(gfx, "Robot Name", robotX, robotY);
+
+        for(Entity e : activeEntities)
+        {
+            Position p = e.getPosition();
+            drawImage(gfx, e.getImage(), p.getX().doubleValue(), p.getY().doubleValue());
+            drawLabel(gfx, String.valueOf(e.getId()), p.getX().doubleValue(), p.getY().doubleValue());
+        }
     }
     
     
@@ -155,8 +150,8 @@ public class JFXArena extends Pane
         // We also need to know how "big" to make the image. The image file has a natural width 
         // and height, but that's not necessarily the size we want to draw it on the screen. We 
         // do, however, want to preserve its aspect ratio.
-        double fullSizePixelWidth = robot1.getWidth();
-        double fullSizePixelHeight = robot1.getHeight();
+        double fullSizePixelWidth = image.getWidth();
+        double fullSizePixelHeight = image.getHeight();
         
         double displayedPixelWidth, displayedPixelHeight;
         if(fullSizePixelWidth > fullSizePixelHeight)
