@@ -1,12 +1,13 @@
 package Core;
 
-import Interfaces.Spawner;
+import Interfaces.FilterPositions;
+import Interfaces.SpawnEntity;
 import Models.Entity;
 import Models.Position;
-import javafx.application.Platform;
 import javafx.scene.image.Image;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -19,14 +20,16 @@ public class EntityBuilder implements Runnable
     private int id;
     private final Image entityImage;
     private final int spawnTimer;
-    private final Spawner spawner;
+    private final SpawnEntity spawner;
+    private final FilterPositions positionFilter;
     private final List<Position> spawnLocations;
 
-    public EntityBuilder(int spawnTimer, int startingId, Spawner spawner, List<Position> spawnLocations)
+    public EntityBuilder(int spawnTimer, int startingId, SpawnEntity spawner, FilterPositions positionFilter, List<Position> spawnLocations)
     {
         this.spawnTimer = spawnTimer;
         this.id = startingId;
         this.spawner = spawner;
+        this.positionFilter = positionFilter;
         this.spawnLocations = spawnLocations;
         this.entityImage = createImage();
     }
@@ -41,19 +44,12 @@ public class EntityBuilder implements Runnable
             if(spawnLocation != null)
             {
                 Entity newEntity = new Entity(id++, randomDelay, entityImage, spawnLocation);
-                Platform.runLater(() -> spawner.spawn(newEntity));
+                spawner.spawn(newEntity);
             }
 
             Thread.sleep(spawnTimer);
         }
-        catch (InterruptedException e)
-        {
-            System.out.println("Enemy spawner shutting down...");
-        }
-        catch (ExecutionException e)
-        {
-            System.out.printf("Exception: %s", e.getCause());
-        }
+        catch (InterruptedException e) { /* Shutting down... */ }
     }
 
     private Image createImage()
@@ -67,12 +63,10 @@ public class EntityBuilder implements Runnable
         return new Image(is);
     }
 
-    private Position getSpawnLocation() throws ExecutionException, InterruptedException
+    private Position getSpawnLocation()
     {
         Position spawnLocation = null;
-        CompletableFuture<List<Position>> validSpawnsFuture = new CompletableFuture<>();
-        Platform.runLater(() -> validSpawnsFuture.complete(spawner.filterPositions(spawnLocations)));
-        List<Position> validSpawns = validSpawnsFuture.get();
+        List<Position> validSpawns = positionFilter.filter(Collections.unmodifiableList(spawnLocations));
         if(validSpawns.size() > 0)
         {
             int index = ThreadLocalRandom.current().nextInt(validSpawns.size());

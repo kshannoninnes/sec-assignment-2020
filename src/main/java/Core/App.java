@@ -1,6 +1,5 @@
 package Core;
 
-import Interfaces.Game;
 import Models.Position;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -9,8 +8,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,7 +19,8 @@ public class App extends Application
         launch();        
     }
 
-    private ExecutorService threadPool = Executors.newFixedThreadPool(10);
+    private GameImpl game;
+    private final ExecutorService gameThread = Executors.newSingleThreadExecutor();
     
     @Override
     public void start(Stage stage) 
@@ -37,9 +35,8 @@ public class App extends Application
         Position topRight = new Position(BigDecimal.ZERO, new BigDecimal(gridWidth - 1));
         Position bottomRight = new Position(new BigDecimal(gridHeight - 1), new BigDecimal(gridWidth - 1));
 
-        GameImpl game = new GameImpl(gridHeight, gridWidth, arena, List.of(topLeft, topRight, bottomLeft, bottomRight));
-        game.start();
-
+        game = new GameImpl(gridHeight, gridWidth, arena, List.of(topLeft, topRight, bottomLeft, bottomRight));
+        gameThread.execute(game);
 
 
 
@@ -72,7 +69,7 @@ public class App extends Application
     public void stop() throws Exception
     {
         super.stop();
-        threadPool.shutdownNow();
-        System.exit(0);
+        game.shutdown();
+        gameThread.shutdown();
     }
 }

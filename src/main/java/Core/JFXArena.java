@@ -12,6 +12,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * A JavaFX GUI element that displays a grid on which you can draw images, text and lines.
@@ -42,7 +44,15 @@ public class JFXArena extends Pane implements UserInterface
         canvas.heightProperty().bind(heightProperty());
         getChildren().add(canvas);
 
-        activeEntities = Collections.synchronizedList(new LinkedList<>());
+        activeEntities = new ArrayList<>();
+    }
+
+    @Override
+    public void drawLine(Position source, Position destination)
+    {
+        System.out.println("Drawing line!");
+        GraphicsContext gfx = canvas.getGraphicsContext2D();
+        drawLine(gfx, source.getX().intValue(), source.getY().intValue(), destination.getX().intValue(), destination.getY().intValue());
     }
 
     @Override
@@ -124,7 +134,7 @@ public class JFXArena extends Pane implements UserInterface
         // Invoke helper methods to draw things at the current location.
         // ** You will need to adapt this to the requirements of your application. **
 
-        for(Entity e : activeEntities)
+        for (Entity e : activeEntities)
         {
             Position p = e.getPosition();
             drawImage(gfx, e.getImage(), p.getX().doubleValue(), p.getY().doubleValue());

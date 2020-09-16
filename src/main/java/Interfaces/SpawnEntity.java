@@ -2,7 +2,7 @@ package Interfaces;
 
 import Models.Entity;
 
-public interface Spawner extends Game
+public interface SpawnEntity
 {
     void spawn(Entity entity);
 }
