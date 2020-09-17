@@ -30,7 +30,7 @@ public class ScoreHandler
         updateScore();
     }
 
-    public void enemyKilled(Entity enemyKilled, FireCommand killingShot)
+    public int enemyKilled(Entity enemyKilled, FireCommand killingShot)
     {
         long delayBonus = Math.abs(System.currentTimeMillis() - killingShot.getTimeInitiated());
         int enemyKilledBonus = 100 * (int)(delayBonus / enemyKilled.getDelayInMillis());
@@ -40,6 +40,7 @@ public class ScoreHandler
         }
 
         updateScore();
+        return enemyKilledBonus;
     }
 
     private void updateScore()

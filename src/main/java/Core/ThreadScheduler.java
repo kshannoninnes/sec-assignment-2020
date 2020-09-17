@@ -83,8 +83,8 @@ public class ThreadScheduler implements Runnable
                         game.removeEntity(attackedEntity);
                         Future<?> future = moveFutures.remove(String.valueOf(attackedEntity.getId()));
                         if(future != null) future.cancel(true);
-                        scoreHandler.enemyKilled(attackedEntity, fireCommand);
-                        message = String.format("Attack on [%d, %d] hits entity #%d.", x, y, attackedEntity.getId());
+                        int scoreGained = scoreHandler.enemyKilled(attackedEntity, fireCommand);
+                        message = String.format("Attack on [%d, %d] hits entity #%d for a bonus score of %d.", x, y, attackedEntity.getId(), scoreGained);
                     } else
                     {
                         message = String.format("Attack on %d, %d missed.", x, y);

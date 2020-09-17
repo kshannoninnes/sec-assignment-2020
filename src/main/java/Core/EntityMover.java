@@ -54,7 +54,7 @@ public class EntityMover implements Runnable
     private void moveEntity(Position previousPos, List<Position> allowedMoves) throws InterruptedException
     {
         // The number to increment the current position by is equal to
-        // Math.abs(originalPos - finalPos) / 10, rounded to 1 decimal place.
+        // (finalPos - originalPos) / 10, rounded to 1 decimal place.
         Position finalPos = allowedMoves.get(ThreadLocalRandom.current().nextInt(allowedMoves.size()));
         BigDecimal xInc = (finalPos.getX().subtract(previousPos.getX()))
                 .divide(BigDecimal.TEN, 1, RoundingMode.HALF_EVEN);

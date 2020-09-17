@@ -12,18 +12,19 @@ public class Game
 {
     private final int gridHeight;
     private final int gridWidth;
-    private final UserInterface gameUserInterface;
+    private final UserInterface ui;
     private final List<Entity> activeEntities;
 
 
-    // TODO Implement scoring, clean up EntityBuilder constructor, and clean up UserInterface interface
+    // TODO Clean up EntityBuilder constructor, and clean up UserInterface interface
     // TODO Remove any game-specific stuff from JFXArena (should only be responsible for drawing stuff)
     // TODO Remove console printing throughout code
-    public Game(int gridHeight, int gridWidth, UserInterface gameUserInterface)
+    public Game(int gridHeight, int gridWidth, UserInterface ui)
     {
         this.gridHeight = gridHeight;
         this.gridWidth = gridWidth;
-        this.gameUserInterface = gameUserInterface;
+        this.ui = ui;
+        
         this.activeEntities = Collections.synchronizedList(new LinkedList<>());
     }
 
@@ -102,6 +103,6 @@ public class Game
 
     private void updateBoard()
     {
-        Platform.runLater(() -> gameUserInterface.renderEntities(new ArrayList<>(activeEntities)));
+        Platform.runLater(() -> ui.renderEntities(new ArrayList<>(activeEntities)));
     }
 }
