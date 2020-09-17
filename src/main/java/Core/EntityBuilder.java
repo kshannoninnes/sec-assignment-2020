@@ -48,7 +48,7 @@ public class EntityBuilder implements Runnable
             {
                 Entity newEntity = new Entity(id++, randomDelay, entityImage, spawnLocation);
                 adder.add(newEntity);
-                logger.log(String.format("Entity #%d spawned.", newEntity.getId()));
+                logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
             }
 
             Thread.sleep(spawnTimer);
