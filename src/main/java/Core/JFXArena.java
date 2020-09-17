@@ -4,16 +4,16 @@ import Interfaces.ArenaListener;
 import Interfaces.UserInterface;
 import Models.Entity;
 import Models.Position;
+import javafx.scene.Node;
 import javafx.scene.canvas.*;
 import javafx.geometry.VPos;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * A JavaFX GUI element that displays a grid on which you can draw images, text and lines.
@@ -45,14 +45,6 @@ public class JFXArena extends Pane implements UserInterface
         getChildren().add(canvas);
 
         activeEntities = new ArrayList<>();
-    }
-
-    @Override
-    public void drawLine(Position source, Position destination)
-    {
-        System.out.println("Drawing line!");
-        GraphicsContext gfx = canvas.getGraphicsContext2D();
-        drawLine(gfx, source.getX().intValue(), source.getY().intValue(), destination.getX().intValue(), destination.getY().intValue());
     }
 
     @Override
@@ -164,20 +156,21 @@ public class JFXArena extends Pane implements UserInterface
         double fullSizePixelHeight = image.getHeight();
         
         double displayedPixelWidth, displayedPixelHeight;
+        double scale = 0.80;
         if(fullSizePixelWidth > fullSizePixelHeight)
         {
             // Here, the image is wider than it is high, so we'll display it such that it's as 
             // wide as a full grid cell, and the height will be set to preserve the aspect 
             // ratio.
-            displayedPixelWidth = gridSquareSize;
-            displayedPixelHeight = gridSquareSize * fullSizePixelHeight / fullSizePixelWidth;
+            displayedPixelWidth = gridSquareSize * scale;
+            displayedPixelHeight = (gridSquareSize * fullSizePixelHeight / fullSizePixelWidth) * scale;
         }
         else
         {
             // Otherwise, it's the other way around -- full height, and width is set to 
             // preserve the aspect ratio.
-            displayedPixelHeight = gridSquareSize;
-            displayedPixelWidth = gridSquareSize * fullSizePixelWidth / fullSizePixelHeight;
+            displayedPixelHeight = gridSquareSize * scale;
+            displayedPixelWidth = (gridSquareSize * fullSizePixelWidth / fullSizePixelHeight) * scale;
         }
 
         // Actually put the image on the screen.
@@ -201,28 +194,5 @@ public class JFXArena extends Pane implements UserInterface
         gfx.setTextBaseline(VPos.TOP);
         gfx.setStroke(Color.BLUE);
         gfx.strokeText(label, (gridX + 0.5) * gridSquareSize, (gridY + 1.0) * gridSquareSize);
-    }
-    
-    /** 
-     * Draws a (slightly clipped) line between two grid coordinates.
-     *     
-     * You shouldn't need to modify this method.
-     */
-    private void drawLine(GraphicsContext gfx, double gridX1, double gridY1, 
-                                               double gridX2, double gridY2)
-    {
-        gfx.setStroke(Color.RED);
-        
-        // Recalculate the starting coordinate to be one unit closer to the destination, so that it
-        // doesn't overlap with any image appearing in the starting grid cell.
-        final double radius = 0.5;
-        double angle = Math.atan2(gridY2 - gridY1, gridX2 - gridX1);
-        double clippedGridX1 = gridX1 + Math.cos(angle) * radius;
-        double clippedGridY1 = gridY1 + Math.sin(angle) * radius;
-        
-        gfx.strokeLine((clippedGridX1 + 0.5) * gridSquareSize, 
-                       (clippedGridY1 + 0.5) * gridSquareSize, 
-                       (gridX2 + 0.5) * gridSquareSize, 
-                       (gridY2 + 0.5) * gridSquareSize);
     }
 }

@@ -19,7 +19,7 @@ public class App extends Application
         launch();        
     }
 
-    private GameImpl game;
+    private Game game;
     private final ExecutorService gameThread = Executors.newSingleThreadExecutor();
     
     @Override
@@ -30,12 +30,16 @@ public class App extends Application
         stage.setTitle("Fortress Defence (SEC Assignment 2020)");
         JFXArena arena = new JFXArena(gridHeight, gridWidth);
 
+        TextArea textArea = new TextArea();
+        Logger logger = new Logger(textArea);
+
         Position topLeft = new Position(BigDecimal.ZERO, BigDecimal.ZERO);
         Position bottomLeft = new Position(new BigDecimal(gridHeight - 1), BigDecimal.ZERO);
         Position topRight = new Position(BigDecimal.ZERO, new BigDecimal(gridWidth - 1));
         Position bottomRight = new Position(new BigDecimal(gridHeight - 1), new BigDecimal(gridWidth - 1));
+        List<Position> spawns = List.of(topLeft, topRight, bottomLeft, bottomRight);
 
-        game = new GameImpl(gridHeight, gridWidth, arena, List.of(topLeft, topRight, bottomLeft, bottomRight));
+        game = new Game(logger, gridHeight, gridWidth, arena, spawns);
         gameThread.execute(game);
 
 
@@ -47,13 +51,8 @@ public class App extends Application
         toolbar.getItems().addAll(btn1, btn2, label);
         
         btn1.setOnAction((event) -> System.out.println("Button 1 pressed"));
-                    
-        TextArea logger = new TextArea();
-        logger.appendText("Hello\n");
-        logger.appendText("World\n");
-        
         SplitPane splitPane = new SplitPane();
-        splitPane.getItems().addAll(arena, logger);
+        splitPane.getItems().addAll(arena, textArea);
         arena.setMinWidth(300.0);
         
         BorderPane contentPane = new BorderPane();

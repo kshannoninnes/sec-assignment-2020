@@ -1,7 +1,8 @@
 package Core;
 
 import Interfaces.FilterPositions;
-import Interfaces.SpawnEntity;
+import Interfaces.Log;
+import Interfaces.AddEntity;
 import Models.Entity;
 import Models.Position;
 import javafx.scene.image.Image;
@@ -13,23 +14,25 @@ import java.util.concurrent.*;
 
 public class EntityBuilder implements Runnable
 {
-    private final String IMAGE_FILE = "enemy.png";
+    private final String IMAGE_FILE = "redsphere.png";
     private final int DELAY_UPPER_BOUND = 2000;
     private final int DELAY_LOWER_BOUND = 500;
 
     private int id;
+    private final Log logger;
     private final Image entityImage;
     private final int spawnTimer;
-    private final SpawnEntity spawner;
-    private final FilterPositions positionFilter;
+    private final AddEntity adder;
+    private final FilterPositions filter;
     private final List<Position> spawnLocations;
 
-    public EntityBuilder(int spawnTimer, int startingId, SpawnEntity spawner, FilterPositions positionFilter, List<Position> spawnLocations)
+    public EntityBuilder(int spawnTimer, List<Position> spawnLocations, Log logger, FilterPositions filter, AddEntity adder)
     {
+        this.id = 1;
         this.spawnTimer = spawnTimer;
-        this.id = startingId;
-        this.spawner = spawner;
-        this.positionFilter = positionFilter;
+        this.logger = logger;
+        this.adder = adder;
+        this.filter = filter;
         this.spawnLocations = spawnLocations;
         this.entityImage = createImage();
     }
@@ -44,7 +47,8 @@ public class EntityBuilder implements Runnable
             if(spawnLocation != null)
             {
                 Entity newEntity = new Entity(id++, randomDelay, entityImage, spawnLocation);
-                spawner.spawn(newEntity);
+                adder.add(newEntity);
+                logger.log(String.format("Entity #%d spawned.", newEntity.getId()));
             }
 
             Thread.sleep(spawnTimer);
@@ -66,7 +70,7 @@ public class EntityBuilder implements Runnable
     private Position getSpawnLocation()
     {
         Position spawnLocation = null;
-        List<Position> validSpawns = positionFilter.filter(Collections.unmodifiableList(spawnLocations));
+        List<Position> validSpawns = filter.filter(Collections.unmodifiableList(spawnLocations));
         if(validSpawns.size() > 0)
         {
             int index = ThreadLocalRandom.current().nextInt(validSpawns.size());

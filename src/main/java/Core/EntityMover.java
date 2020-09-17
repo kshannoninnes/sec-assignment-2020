@@ -18,7 +18,7 @@ public class EntityMover implements Runnable
     private final MoveEntity mover;
     private Entity entity;
 
-    public EntityMover(MoveEntity mover, FilterPositions filter, Entity entity)
+    public EntityMover(Entity entity, FilterPositions filter, MoveEntity mover)
     {
         this.entity = entity;
         this.mover = mover;

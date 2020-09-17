@@ -2,6 +2,7 @@ package Core;
 
 import Interfaces.ArenaListener;
 import Interfaces.FindEntity;
+import Interfaces.Log;
 import Interfaces.RemoveEntity;
 import Models.Entity;
 import Models.FireCommand;
@@ -13,13 +14,15 @@ import java.util.concurrent.BlockingQueue;
 
 public class AttackHandler implements Runnable, ArenaListener
 {
+    private final Log logger;
     private final FindEntity finder;
     private final RemoveEntity remover;
     private final BlockingQueue<FireCommand> fireCommandQueue;
 
-    public AttackHandler(FindEntity finder, RemoveEntity remover)
+    public AttackHandler(Log logger, FindEntity finder, RemoveEntity remover)
     {
         fireCommandQueue = new ArrayBlockingQueue<>(10);
+        this.logger = logger;
         this.finder = finder;
         this.remover = remover;
     }
@@ -32,13 +35,22 @@ public class AttackHandler implements Runnable, ArenaListener
             FireCommand fireCommand = fireCommandQueue.poll();
             if (fireCommand != null)
             {
-                System.out.printf("Firing on %f, %f\n", fireCommand.getAttackLocation().getX(), fireCommand.getAttackLocation().getY());
                 Entity attackedEntity = finder.find(fireCommand.getAttackLocation());
+                int x = fireCommand.getAttackLocation().getX().intValue();
+                int y = fireCommand.getAttackLocation().getY().intValue();
+                String message;
+
                 if(attackedEntity != null)
                 {
                     remover.remove(attackedEntity);
-                    System.out.printf("Direct hit! Entity #%d destroyed!\n", attackedEntity.getId());
+                    message = String.format("Attack on [%d, %d] hits entity #%d.", x, y, attackedEntity.getId());
                 }
+                else
+                {
+                    message = String.format("Attack on %d, %d missed.", x, y);
+                }
+
+                logger.log(message);
                 Thread.sleep(1000);
             }
         }
@@ -50,8 +62,6 @@ public class AttackHandler implements Runnable, ArenaListener
         long timeInitiated = System.currentTimeMillis();
         Position attackLocation = new Position(new BigDecimal(x), new BigDecimal(y));
         FireCommand f = new FireCommand(timeInitiated, attackLocation);
-        boolean success = fireCommandQueue.offer(f);
-        if(success) System.out.println("Fire command queued");
-        else System.out.println("Fire command failed to queue");
+        fireCommandQueue.offer(f);
     }
 }

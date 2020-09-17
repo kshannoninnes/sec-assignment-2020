@@ -3,7 +3,7 @@ package Interfaces;
 import Models.Entity;
 
 @FunctionalInterface
-public interface RemoveEntity
+public interface AddEntity
 {
-    void remove(Entity entity);
+    void add(Entity entity);
 }
