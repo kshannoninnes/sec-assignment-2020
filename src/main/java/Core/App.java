@@ -21,6 +21,7 @@ public class App extends Application
 
     private ThreadScheduler threadScheduler;
     private ExecutorService gameThread;
+    private boolean running = false;
     
     @Override
     public void start(Stage stage) 
@@ -47,13 +48,21 @@ public class App extends Application
         
         btn1.setOnAction((event) ->
         {
+            if(running) return;
+            running = true;
+
             Logger logger = new Logger(textArea);
+
             Game game = new Game(gridHeight, gridWidth, arena);
+
             AttackHandler attackHandler = new AttackHandler();
             arena.addSquareClickedListener(attackHandler);
-            EntityBuilder spawnHandler = new EntityBuilder(spawns, game::filterPositions);
 
-            threadScheduler = new ThreadScheduler(logger, game, attackHandler, spawnHandler);
+            EntityCreator spawnHandler = new EntityCreator(spawns, game::filterPositions);
+
+            ScoreHandler scoreHandler = new ScoreHandler(scoreAmountLabel);
+
+            threadScheduler = new ThreadScheduler(logger, game, attackHandler, spawnHandler, scoreHandler);
 
             gameThread = Executors.newSingleThreadExecutor();
             gameThread.execute(threadScheduler);
@@ -61,6 +70,9 @@ public class App extends Application
 
         btn2.setOnAction((event) ->
         {
+            if(!running) return;
+            running = false;
+
             arena.clearListeners();
             threadScheduler.stop();
             gameThread.shutdown();

@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
-public class EntityBuilder
+public class EntityCreator
 {
     private final String IMAGE_FILE = "redsphere.png";
     private final int DELAY_UPPER_BOUND = 2000;
@@ -21,7 +21,7 @@ public class EntityBuilder
     private final FilterPositions filter;
     private final List<Position> spawnLocations;
 
-    public EntityBuilder(List<Position> spawnLocations, FilterPositions filter)
+    public EntityCreator(List<Position> spawnLocations, FilterPositions filter)
     {
         this.id = 1;
         this.filter = filter;

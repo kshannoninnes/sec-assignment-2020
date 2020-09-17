@@ -29,8 +29,8 @@ public class Game
 
     public void shutdown()
     {
-        gameUserInterface.renderEntities(new LinkedList<>());
-        System.out.println("Shutting down...");
+        activeEntities.clear();
+        updateBoard();
     }
 
     /**

@@ -10,67 +10,58 @@ import java.util.concurrent.*;
 public class ThreadScheduler implements Runnable
 {
     private final AttackHandler attackHandler;
-    private final ScheduledExecutorService attackScheduler;
+    private final ScheduledExecutorService attackExecutor;
 
-    private final EntityBuilder entityBuilder;
-    private final ScheduledExecutorService spawnScheduler;
+    private final ScoreHandler scoreHandler;
+    private final ScheduledExecutorService scoreExecutor;
 
-    private final Map<String, Future<?>> moverFutures;
-    private final ScheduledExecutorService moverExec;
+    private final EntityCreator entityCreator;
+    private final ScheduledExecutorService spawnExecutor;
+
+    private final Map<String, Future<?>> moveFutures;
+    private final ScheduledExecutorService moveExecutor;
 
     private final Game game;
     private final Logger logger;
 
-    public ThreadScheduler(Logger logger, Game game, AttackHandler attackHandler, EntityBuilder entityBuilder)
+    public ThreadScheduler(Logger logger, Game game, AttackHandler attackHandler, EntityCreator entityCreator, ScoreHandler scoreHandler)
     {
         this.logger = logger;
         this.game = game;
 
         this.attackHandler = attackHandler;
-        this.attackScheduler = Executors.newSingleThreadScheduledExecutor();
+        this.attackExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        this.entityBuilder = entityBuilder;
-        this.spawnScheduler = Executors.newSingleThreadScheduledExecutor();
+        this.scoreHandler = scoreHandler;
+        this.scoreExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        this.moverFutures = new HashMap<>();
-        this.moverExec = Executors.newScheduledThreadPool(20);
+        this.entityCreator = entityCreator;
+        this.spawnExecutor = Executors.newSingleThreadScheduledExecutor();
+
+        this.moveFutures = new HashMap<>();
+        this.moveExecutor = Executors.newScheduledThreadPool(20);
     }
 
     @Override
     public void run()
     {
+        createScoreScheduler();
         createAttackScheduler();
         createSpawnScheduler();
     }
 
     public void stop()
     {
-        attackScheduler.shutdownNow();
-        spawnScheduler.shutdownNow();
-        moverExec.shutdownNow();
+        scoreExecutor.shutdownNow();
+        attackExecutor.shutdownNow();
+        spawnExecutor.shutdownNow();
+        moveExecutor.shutdownNow();
         game.shutdown();
     }
 
-    private void createSpawnScheduler()
+    private void createScoreScheduler()
     {
-        Runnable spawnTask = () ->
-        {
-            try
-            {
-                CompletableFuture<Entity> spawnFuture = new CompletableFuture<>();
-                spawnFuture.complete(entityBuilder.getEntity());
-                Entity newEntity = spawnFuture.get();
-
-                if (newEntity == null) return;
-
-                game.addEntity(newEntity);
-                logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
-                createMoveScheduler(newEntity);
-            }
-            catch (InterruptedException | ExecutionException e) { /* ... */ }
-        };
-
-        spawnScheduler.scheduleAtFixedRate(spawnTask, 0, 2000, TimeUnit.MILLISECONDS);
+        scoreExecutor.scheduleWithFixedDelay(scoreHandler::incrementScore, 1000, 1000, TimeUnit.MILLISECONDS);
     }
 
     private void createAttackScheduler()
@@ -90,8 +81,9 @@ public class ThreadScheduler implements Runnable
                     if (attackedEntity != null)
                     {
                         game.removeEntity(attackedEntity);
-                        Future<?> future = moverFutures.remove(String.valueOf(attackedEntity.getId()));
+                        Future<?> future = moveFutures.remove(String.valueOf(attackedEntity.getId()));
                         if(future != null) future.cancel(true);
+                        scoreHandler.enemyKilled(attackedEntity, fireCommand);
                         message = String.format("Attack on [%d, %d] hits entity #%d.", x, y, attackedEntity.getId());
                     } else
                     {
@@ -105,14 +97,36 @@ public class ThreadScheduler implements Runnable
             catch (InterruptedException e) { /* ... */ }
         };
 
-        attackScheduler.scheduleWithFixedDelay(attackTask, 0, 100, TimeUnit.MILLISECONDS);
+        attackExecutor.scheduleWithFixedDelay(attackTask, 0, 100, TimeUnit.MILLISECONDS);
+    }
+
+    private void createSpawnScheduler()
+    {
+        Runnable spawnTask = () ->
+        {
+            try
+            {
+                CompletableFuture<Entity> spawnFuture = new CompletableFuture<>();
+                spawnFuture.complete(entityCreator.getEntity());
+                Entity newEntity = spawnFuture.get();
+
+                if (newEntity == null) return;
+
+                game.addEntity(newEntity);
+                logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
+                createMoveScheduler(newEntity);
+            }
+            catch (InterruptedException | ExecutionException e) { /* ... */ }
+        };
+
+        spawnExecutor.scheduleAtFixedRate(spawnTask, 0, 2000, TimeUnit.MILLISECONDS);
     }
 
     private void createMoveScheduler(Entity entity)
     {
         EntityMover entityMover = new EntityMover(entity, game::filterPositions, game::moveEntity);
         long delay = entity.getDelayInMillis();
-        ScheduledFuture<?> future = moverExec.scheduleAtFixedRate(entityMover, delay, delay, TimeUnit.MILLISECONDS);
-        moverFutures.put(String.valueOf(entity.getId()), future);
+        ScheduledFuture<?> future = moveExecutor.scheduleAtFixedRate(entityMover, delay, delay, TimeUnit.MILLISECONDS);
+        moveFutures.put(String.valueOf(entity.getId()), future);
     }
 }
