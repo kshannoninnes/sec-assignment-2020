@@ -9,10 +9,8 @@ import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class App extends Application 
 {
@@ -21,7 +19,7 @@ public class App extends Application
         launch();        
     }
 
-    private Game game;
+    private ThreadScheduler threadScheduler;
     private ExecutorService gameThread;
     
     @Override
@@ -33,7 +31,6 @@ public class App extends Application
         JFXArena arena = new JFXArena(gridHeight, gridWidth);
 
         TextArea textArea = new TextArea();
-        Logger logger = new Logger(textArea);
 
         Position topLeft = new Position(BigDecimal.ZERO, BigDecimal.ZERO);
         Position bottomLeft = new Position(new BigDecimal(gridHeight - 1), BigDecimal.ZERO);
@@ -41,25 +38,31 @@ public class App extends Application
         Position bottomRight = new Position(new BigDecimal(gridHeight - 1), new BigDecimal(gridWidth - 1));
         List<Position> spawns = List.of(topLeft, topRight, bottomLeft, bottomRight);
 
-
-
-
         ToolBar toolbar = new ToolBar();
         Button btn1 = new Button("Start");
         Button btn2 = new Button("Stop");
-        Label label = new Label("Score: 999");
-        toolbar.getItems().addAll(btn1, btn2, label);
+        Label scoreLabel = new Label("Score: ");
+        Label scoreAmountLabel = new Label("0");
+        toolbar.getItems().addAll(btn1, btn2, scoreLabel, scoreAmountLabel);
         
         btn1.setOnAction((event) ->
         {
-            game = new Game(logger, gridHeight, gridWidth, arena, spawns);
+            Logger logger = new Logger(textArea);
+            Game game = new Game(gridHeight, gridWidth, arena);
+            AttackHandler attackHandler = new AttackHandler();
+            arena.addSquareClickedListener(attackHandler);
+            EntityBuilder spawnHandler = new EntityBuilder(spawns, game::filterPositions);
+
+            threadScheduler = new ThreadScheduler(logger, game, attackHandler, spawnHandler);
+
             gameThread = Executors.newSingleThreadExecutor();
-            gameThread.execute(game);
+            gameThread.execute(threadScheduler);
         });
 
         btn2.setOnAction((event) ->
         {
-            game.shutdown();
+            arena.clearListeners();
+            threadScheduler.stop();
             gameThread.shutdown();
         });
 
@@ -80,7 +83,7 @@ public class App extends Application
     public void stop() throws Exception
     {
         super.stop();
-        game.shutdown();
+        threadScheduler.stop();
         gameThread.shutdown();
     }
 }

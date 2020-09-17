@@ -80,6 +80,11 @@ public class JFXArena extends Pane implements UserInterface
         }
         listeners.add(newListener);
     }
+
+    public void clearListeners()
+    {
+        listeners = null;
+    }
         
         
     /**
