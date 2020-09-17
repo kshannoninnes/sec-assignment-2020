@@ -61,6 +61,7 @@ public class Game implements Runnable
         spawnerExec.shutdownNow();
         moverExec.shutdownNow();
         attackExec.shutdownNow();
+        gameUserInterface.renderEntities(new LinkedList<>());
         System.out.println("Shutting down...");
     }
 

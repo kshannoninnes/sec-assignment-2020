@@ -1,5 +1,6 @@
 package Core;
 
+import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
 import java.text.SimpleDateFormat;
@@ -18,6 +19,7 @@ public class Logger
     {
         SimpleDateFormat dt = new SimpleDateFormat("hh:mm:ss:SSS");
         Date now = new Date();
-        ui.appendText(String.format("[%s] %s\n", dt.format(now), text));
+        String message = String.format("[%s] %s\n", dt.format(now), text);
+        Platform.runLater(() -> ui.appendText(message));
     }
 }
