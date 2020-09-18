@@ -1,7 +1,7 @@
 package Core;
 
 import Interfaces.*;
-import Models.Entity;
+import Models.MovableEntity;
 import Models.Position;
 import javafx.application.Platform;
 
@@ -13,10 +13,11 @@ public class Game
     private final int gridHeight;
     private final int gridWidth;
     private final UserInterface ui;
-    private final List<Entity> activeEntities;
+    private final List<MovableEntity> activeEntities;
 
 
-    // TODO Clean up EntityBuilder constructor, and clean up UserInterface interface
+    // TODO Clean up EntityBuilder constructor, change hard coupled classes to interfaces
+    // TODO !!!!!!!! Make win condition !!!!!!!!
     // TODO Remove any game-specific stuff from JFXArena (should only be responsible for drawing stuff)
     // TODO Remove console printing throughout code
     public Game(int gridHeight, int gridWidth, UserInterface ui)
@@ -24,7 +25,7 @@ public class Game
         this.gridHeight = gridHeight;
         this.gridWidth = gridWidth;
         this.ui = ui;
-        
+
         this.activeEntities = Collections.synchronizedList(new LinkedList<>());
     }
 
@@ -38,17 +39,17 @@ public class Game
      * Entity Manipulation
      */
 
-    public void addEntity(Entity entity)
+    public void addEntity(MovableEntity entity)
     {
         activeEntities.add(entity); // synchronizedList
         updateBoard();
     }
 
-    public Entity findEntity(Position position)
+    public MovableEntity findEntity(Position position)
     {
         synchronized (activeEntities)
         {
-            for(Entity e : activeEntities)
+            for(MovableEntity e : activeEntities)
             {
                 if(e.getPosition().equals(position)) return e;
             }
@@ -57,7 +58,7 @@ public class Game
         return null;
     }
 
-    public void moveEntity(Entity entity)
+    public void moveEntity(MovableEntity entity)
     {
         // removeIf iterates over the list behind the scenes
         synchronized (activeEntities)
@@ -69,7 +70,7 @@ public class Game
         updateBoard();
     }
 
-    public void removeEntity(Entity entity)
+    public void removeEntity(MovableEntity entity)
     {
         activeEntities.remove(entity); // synchronizedList
         updateBoard();
@@ -82,20 +83,22 @@ public class Game
     public List<Position> filterPositions(List<Position> proposedPositions)
     {
         List<Position> acceptedPositions = new LinkedList<>(proposedPositions);
-        for (Position p : proposedPositions)
+        for (Position proposedPosition : proposedPositions)
         {
             synchronized (activeEntities)
             {
-                for (Entity activeEntity : activeEntities)
-                    if (activeEntity.getPosition().equals(p))
-                        acceptedPositions.remove(p);
+                for (MovableEntity activeEntity : activeEntities)
+                    if (activeEntity.getPosition().equals(proposedPosition))
+                        acceptedPositions.remove(proposedPosition);
             }
 
-            if (p.getX().compareTo(new BigDecimal(gridWidth)) >= 0 || p.getX().compareTo(BigDecimal.ZERO) < 0)
-                acceptedPositions.remove(p);
+            if (proposedPosition.getX().compareTo(new BigDecimal(gridWidth)) >= 0
+                    || proposedPosition.getX().compareTo(BigDecimal.ZERO) < 0)
+                acceptedPositions.remove(proposedPosition);
 
-            if (p.getY().compareTo(new BigDecimal(gridHeight)) >= 0 || p.getY().compareTo(BigDecimal.ZERO) < 0)
-                acceptedPositions.remove(p);
+            if (proposedPosition.getY().compareTo(new BigDecimal(gridHeight)) >= 0
+                    || proposedPosition.getY().compareTo(BigDecimal.ZERO) < 0)
+                acceptedPositions.remove(proposedPosition);
         }
 
         return Collections.unmodifiableList(acceptedPositions);

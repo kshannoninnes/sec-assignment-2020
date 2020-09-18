@@ -1,9 +1,9 @@
 package Interfaces;
 
-import Models.Entity;
+import Models.MovableEntity;
 
 @FunctionalInterface
 public interface RemoveEntity
 {
-    void remove(Entity entity);
+    void remove(MovableEntity movableEntity);
 }

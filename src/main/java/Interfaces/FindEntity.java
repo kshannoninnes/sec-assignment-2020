@@ -1,10 +1,10 @@
 package Interfaces;
 
-import Models.Entity;
+import Models.MovableEntity;
 import Models.Position;
 
 @FunctionalInterface
 public interface FindEntity
 {
-    Entity find(Position location);
+    MovableEntity find(Position location);
 }

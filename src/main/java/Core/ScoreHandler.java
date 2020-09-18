@@ -1,6 +1,6 @@
 package Core;
 
-import Models.Entity;
+import Models.MovableEntity;
 import Models.FireCommand;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
@@ -30,7 +30,7 @@ public class ScoreHandler
         updateScore();
     }
 
-    public int enemyKilled(Entity enemyKilled, FireCommand killingShot)
+    public int enemyKilled(MovableEntity enemyKilled, FireCommand killingShot)
     {
         long delayBonus = Math.abs(System.currentTimeMillis() - killingShot.getTimeInitiated());
         int enemyKilledBonus = 100 * (int)(delayBonus / enemyKilled.getDelayInMillis());

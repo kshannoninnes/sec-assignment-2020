@@ -1,9 +1,9 @@
 package Interfaces;
 
-import Models.Entity;
+import Models.MovableEntity;
 
 @FunctionalInterface
 public interface MoveEntity
 {
-    void move(Entity entity);
+    void move(MovableEntity movableEntity);
 }

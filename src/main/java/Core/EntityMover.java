@@ -2,7 +2,7 @@ package Core;
 
 import Interfaces.MoveEntity;
 import Interfaces.FilterPositions;
-import Models.Entity;
+import Models.MovableEntity;
 import Models.Position;
 
 import java.math.BigDecimal;
@@ -16,11 +16,11 @@ public class EntityMover implements Runnable
 {
     private final FilterPositions filter;
     private final MoveEntity mover;
-    private Entity entity;
+    private MovableEntity movableEntity;
 
-    public EntityMover(Entity entity, FilterPositions filter, MoveEntity mover)
+    public EntityMover(MovableEntity movableEntity, FilterPositions filter, MoveEntity mover)
     {
-        this.entity = entity;
+        this.movableEntity = movableEntity;
         this.mover = mover;
         this.filter = filter;
     }
@@ -30,7 +30,7 @@ public class EntityMover implements Runnable
     {
         try
         {
-            Position currentPos = entity.getPosition();
+            Position currentPos = movableEntity.getPosition();
             Position previousPos = new Position(currentPos.getX(), currentPos.getY());
             List<Position> allowedMoves = getPossibleMoves(currentPos);
             if(allowedMoves.size() > 0)  moveEntity(previousPos, allowedMoves);
@@ -64,13 +64,13 @@ public class EntityMover implements Runnable
         for(int ii = 0; ii < 10; ii++)
         {
             long start = System.currentTimeMillis();
-            Position currentPos = entity.getPosition();
+            Position currentPos = movableEntity.getPosition();
 
             // Because Entity is immutable, in order to "move" an entity, the existing
             // entity is replaced with a new one that has a slightly different position
             Position nextPos = new Position(currentPos.getX().add(xInc), currentPos.getY().add(yInc));
-            entity = new Entity(entity.getId(), entity.getDelayInMillis(), entity.getImage(), nextPos);
-            mover.move(entity);
+            movableEntity = new MovableEntity(movableEntity.getId(), movableEntity.getImage(), nextPos, movableEntity.getDelayInMillis());
+            mover.move(movableEntity);
             long runTime = Math.abs(System.currentTimeMillis() - start);
 
             Thread.sleep(50 - runTime);

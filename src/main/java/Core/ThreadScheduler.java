@@ -1,6 +1,6 @@
 package Core;
 
-import Models.Entity;
+import Models.MovableEntity;
 import Models.FireCommand;
 
 import java.util.HashMap;
@@ -73,18 +73,18 @@ public class ThreadScheduler implements Runnable
                 FireCommand fireCommand = attackHandler.getFireCommand();
                 if (fireCommand != null)
                 {
-                    Entity attackedEntity = game.findEntity(fireCommand.getAttackLocation());
+                    MovableEntity attackedMovableEntity = game.findEntity(fireCommand.getAttackLocation());
                     int x = fireCommand.getAttackLocation().getX().intValue();
                     int y = fireCommand.getAttackLocation().getY().intValue();
 
                     String message;
-                    if (attackedEntity != null)
+                    if (attackedMovableEntity != null)
                     {
-                        game.removeEntity(attackedEntity);
-                        Future<?> future = moveFutures.remove(String.valueOf(attackedEntity.getId()));
+                        game.removeEntity(attackedMovableEntity);
+                        Future<?> future = moveFutures.remove(String.valueOf(attackedMovableEntity.getId()));
                         if(future != null) future.cancel(true);
-                        int scoreGained = scoreHandler.enemyKilled(attackedEntity, fireCommand);
-                        message = String.format("Attack on [%d, %d] hits entity #%d for a bonus score of %d.", x, y, attackedEntity.getId(), scoreGained);
+                        int scoreGained = scoreHandler.enemyKilled(attackedMovableEntity, fireCommand);
+                        message = String.format("Attack on [%d, %d] hits entity #%d for a bonus score of %d.", x, y, attackedMovableEntity.getId(), scoreGained);
                     } else
                     {
                         message = String.format("Attack on %d, %d missed.", x, y);
@@ -106,15 +106,15 @@ public class ThreadScheduler implements Runnable
         {
             try
             {
-                CompletableFuture<Entity> spawnFuture = new CompletableFuture<>();
+                CompletableFuture<MovableEntity> spawnFuture = new CompletableFuture<>();
                 spawnFuture.complete(entityCreator.getEntity());
-                Entity newEntity = spawnFuture.get();
+                MovableEntity newMovableEntity = spawnFuture.get();
 
-                if (newEntity == null) return;
+                if (newMovableEntity == null) return;
 
-                game.addEntity(newEntity);
-                logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
-                createMoveScheduler(newEntity);
+                game.addEntity(newMovableEntity);
+                logger.log(String.format("Entity #%d spawned with delay %d.", newMovableEntity.getId(), newMovableEntity.getDelayInMillis()));
+                createMoveScheduler(newMovableEntity);
             }
             catch (InterruptedException | ExecutionException e) { /* ... */ }
         };
@@ -122,11 +122,11 @@ public class ThreadScheduler implements Runnable
         spawnExecutor.scheduleAtFixedRate(spawnTask, 0, 2000, TimeUnit.MILLISECONDS);
     }
 
-    private void createMoveScheduler(Entity entity)
+    private void createMoveScheduler(MovableEntity movableEntity)
     {
-        EntityMover entityMover = new EntityMover(entity, game::filterPositions, game::moveEntity);
-        long delay = entity.getDelayInMillis();
+        EntityMover entityMover = new EntityMover(movableEntity, game::filterPositions, game::moveEntity);
+        long delay = movableEntity.getDelayInMillis();
         ScheduledFuture<?> future = moveExecutor.scheduleAtFixedRate(entityMover, delay, delay, TimeUnit.MILLISECONDS);
-        moveFutures.put(String.valueOf(entity.getId()), future);
+        moveFutures.put(String.valueOf(movableEntity.getId()), future);
     }
 }

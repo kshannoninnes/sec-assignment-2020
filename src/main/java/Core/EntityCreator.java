@@ -1,7 +1,7 @@
 package Core;
 
 import Interfaces.FilterPositions;
-import Models.Entity;
+import Models.MovableEntity;
 import Models.Position;
 import javafx.scene.image.Image;
 
@@ -29,14 +29,14 @@ public class EntityCreator
         this.entityImage = createImage();
     }
 
-    public Entity getEntity()
+    public MovableEntity getEntity()
     {
         Position spawnLocation = getSpawnLocation();
         if(spawnLocation == null) return null;
 
         int randomDelay = ThreadLocalRandom.current().nextInt(DELAY_LOWER_BOUND, DELAY_UPPER_BOUND);
 
-        return new Entity(id++, randomDelay, entityImage, spawnLocation);
+        return new MovableEntity(id++, entityImage, spawnLocation, randomDelay);
     }
 
     private Image createImage()
