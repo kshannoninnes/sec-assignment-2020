@@ -1,33 +1,37 @@
 package Core;
 
-import Models.MovableEntity;
-import Models.FireCommand;
+import Interfaces.*;
 
+import Models.Entity;
+import Models.MovableEntity;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
 public class ThreadScheduler implements Runnable
 {
-    private final AttackHandler attackHandler;
+    private final GameManager boardHandler;
+
+    private final AttackManager attackHandler;
     private final ScheduledExecutorService attackExecutor;
 
-    private final ScoreHandler scoreHandler;
+    private final ScoreManager scoreHandler;
     private final ScheduledExecutorService scoreExecutor;
 
-    private final EntityCreator entityCreator;
+    private final SpawnManager spawnHandler;
     private final ScheduledExecutorService spawnExecutor;
 
+    private final MovementManagerFactory moverFactory;
     private final Map<String, Future<?>> moveFutures;
     private final ScheduledExecutorService moveExecutor;
 
-    private final Game game;
-    private final Logger logger;
-
-    public ThreadScheduler(Logger logger, Game game, AttackHandler attackHandler, EntityCreator entityCreator, ScoreHandler scoreHandler)
+    public ThreadScheduler(GameManager boardHandler, AttackManager attackHandler,
+                           SpawnManager spawnHandler, ScoreManager scoreHandler,
+                           MovementManagerFactory moverFactory)
     {
-        this.logger = logger;
-        this.game = game;
+        this.boardHandler = boardHandler;
 
         this.attackHandler = attackHandler;
         this.attackExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -35,10 +39,11 @@ public class ThreadScheduler implements Runnable
         this.scoreHandler = scoreHandler;
         this.scoreExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        this.entityCreator = entityCreator;
+        this.spawnHandler = spawnHandler;
         this.spawnExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        this.moveFutures = new HashMap<>();
+        this.moverFactory = moverFactory;
+        this.moveFutures = Collections.synchronizedMap(new HashMap<>());
         this.moveExecutor = Executors.newScheduledThreadPool(20);
     }
 
@@ -56,7 +61,7 @@ public class ThreadScheduler implements Runnable
         attackExecutor.shutdownNow();
         spawnExecutor.shutdownNow();
         moveExecutor.shutdownNow();
-        game.shutdown();
+        boardHandler.shutdown();
     }
 
     private void createScoreScheduler()
@@ -68,65 +73,36 @@ public class ThreadScheduler implements Runnable
     {
         Runnable attackTask = () ->
         {
-            try
+            Entity destroyedEntity = attackHandler.handleAttack();
+            if(destroyedEntity != null)
             {
-                FireCommand fireCommand = attackHandler.getFireCommand();
-                if (fireCommand != null)
-                {
-                    MovableEntity attackedMovableEntity = game.findEntity(fireCommand.getAttackLocation());
-                    int x = fireCommand.getAttackLocation().getX().intValue();
-                    int y = fireCommand.getAttackLocation().getY().intValue();
-
-                    String message;
-                    if (attackedMovableEntity != null)
-                    {
-                        game.removeEntity(attackedMovableEntity);
-                        Future<?> future = moveFutures.remove(String.valueOf(attackedMovableEntity.getId()));
-                        if(future != null) future.cancel(true);
-                        int scoreGained = scoreHandler.enemyKilled(attackedMovableEntity, fireCommand);
-                        message = String.format("Attack on [%d, %d] hits entity #%d for a bonus score of %d.", x, y, attackedMovableEntity.getId(), scoreGained);
-                    } else
-                    {
-                        message = String.format("Attack on %d, %d missed.", x, y);
-                    }
-
-                    logger.log(message);
-                    Thread.sleep(1000);
-                }
+                Future<?> future = moveFutures.remove(String.valueOf(destroyedEntity.getId()));
+                if(future != null) future.cancel(true);
             }
-            catch (InterruptedException e) { /* ... */ }
         };
 
-        attackExecutor.scheduleWithFixedDelay(attackTask, 0, 100, TimeUnit.MILLISECONDS);
+        attackExecutor.scheduleWithFixedDelay(attackTask, 0, 16, TimeUnit.MILLISECONDS);
     }
 
     private void createSpawnScheduler()
     {
         Runnable spawnTask = () ->
         {
-            try
-            {
-                CompletableFuture<MovableEntity> spawnFuture = new CompletableFuture<>();
-                spawnFuture.complete(entityCreator.getEntity());
-                MovableEntity newMovableEntity = spawnFuture.get();
+            MovableEntity entity = spawnHandler.spawnEntity();
+            if(entity == null) return;
 
-                if (newMovableEntity == null) return;
-
-                game.addEntity(newMovableEntity);
-                logger.log(String.format("Entity #%d spawned with delay %d.", newMovableEntity.getId(), newMovableEntity.getDelayInMillis()));
-                createMoveScheduler(newMovableEntity);
-            }
-            catch (InterruptedException | ExecutionException e) { /* ... */ }
+            createMoveScheduler(entity);
         };
 
         spawnExecutor.scheduleAtFixedRate(spawnTask, 0, 2000, TimeUnit.MILLISECONDS);
     }
 
-    private void createMoveScheduler(MovableEntity movableEntity)
+    private void createMoveScheduler(MovableEntity entity)
     {
-        EntityMover entityMover = new EntityMover(movableEntity, game::filterPositions, game::moveEntity);
-        long delay = movableEntity.getDelayInMillis();
-        ScheduledFuture<?> future = moveExecutor.scheduleAtFixedRate(entityMover, delay, delay, TimeUnit.MILLISECONDS);
-        moveFutures.put(String.valueOf(movableEntity.getId()), future);
+        MovementManager entityMover = moverFactory.createMover(entity);
+        long delay = entity.getDelayInMillis();
+
+        ScheduledFuture<?> future = moveExecutor.scheduleAtFixedRate(entityMover::move, delay, delay, TimeUnit.MILLISECONDS);
+        moveFutures.put(String.valueOf(entity.getId()), future);
     }
 }

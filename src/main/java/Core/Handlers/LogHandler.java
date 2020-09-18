@@ -1,16 +1,17 @@
-package Core;
+package Core.Handlers;
 
+import Interfaces.LogManager;
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Logger
+public class LogHandler implements LogManager
 {
     private final TextArea ui;
 
-    public Logger(TextArea ui)
+    public LogHandler(TextArea ui)
     {
         this.ui = ui;
     }

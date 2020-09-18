@@ -1,6 +1,8 @@
-package Core;
+package Core.Handlers;
 
-import Interfaces.FilterPositions;
+import Interfaces.BoardManager;
+import Interfaces.LogManager;
+import Interfaces.SpawnManager;
 import Models.MovableEntity;
 import Models.Position;
 import javafx.scene.image.Image;
@@ -10,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
-public class EntityCreator
+public class SpawnHandler implements SpawnManager
 {
     private final String IMAGE_FILE = "redsphere.png";
     private final int DELAY_UPPER_BOUND = 2000;
@@ -18,25 +20,32 @@ public class EntityCreator
 
     private int id;
     private final Image entityImage;
-    private final FilterPositions filter;
     private final List<Position> spawnLocations;
 
-    public EntityCreator(List<Position> spawnLocations, FilterPositions filter)
+    private final BoardManager board;
+    private final LogManager logger;
+
+    public SpawnHandler(LogManager logger, BoardManager board, List<Position> spawnLocations)
     {
+        this.logger = logger;
         this.id = 1;
-        this.filter = filter;
         this.spawnLocations = spawnLocations;
         this.entityImage = createImage();
+
+        this.board = board;
     }
 
-    public MovableEntity getEntity()
+    public MovableEntity spawnEntity()
     {
         Position spawnLocation = getSpawnLocation();
         if(spawnLocation == null) return null;
 
         int randomDelay = ThreadLocalRandom.current().nextInt(DELAY_LOWER_BOUND, DELAY_UPPER_BOUND);
+        MovableEntity newEntity = new MovableEntity(id++, entityImage, spawnLocation, randomDelay);
+        board.addEntity(newEntity);
+        logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
 
-        return new MovableEntity(id++, entityImage, spawnLocation, randomDelay);
+        return newEntity;
     }
 
     private Image createImage()
@@ -53,7 +62,7 @@ public class EntityCreator
     private Position getSpawnLocation()
     {
         Position spawnLocation = null;
-        List<Position> validSpawns = filter.filter(Collections.unmodifiableList(spawnLocations));
+        List<Position> validSpawns = board.filterPositions(Collections.unmodifiableList(spawnLocations));
         if(validSpawns.size() > 0)
         {
             int index = ThreadLocalRandom.current().nextInt(validSpawns.size());

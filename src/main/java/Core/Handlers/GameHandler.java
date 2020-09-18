@@ -1,26 +1,24 @@
-package Core;
+package Core.Handlers;
 
-import Interfaces.*;
+import Interfaces.GameManager;
+import Interfaces.UserInterface;
+
 import Models.MovableEntity;
 import Models.Position;
-import javafx.application.Platform;
 
+import javafx.application.Platform;
 import java.math.BigDecimal;
 import java.util.*;
 
-public class Game
+public class GameHandler implements GameManager
 {
     private final int gridHeight;
     private final int gridWidth;
     private final UserInterface ui;
     private final List<MovableEntity> activeEntities;
 
-
-    // TODO Clean up EntityBuilder constructor, change hard coupled classes to interfaces
     // TODO !!!!!!!! Make win condition !!!!!!!!
-    // TODO Remove any game-specific stuff from JFXArena (should only be responsible for drawing stuff)
-    // TODO Remove console printing throughout code
-    public Game(int gridHeight, int gridWidth, UserInterface ui)
+    public GameHandler(int gridHeight, int gridWidth, UserInterface ui)
     {
         this.gridHeight = gridHeight;
         this.gridWidth = gridWidth;
@@ -35,7 +33,7 @@ public class Game
         updateBoard();
     }
 
-    /**
+    /*
      * Entity Manipulation
      */
 
@@ -58,16 +56,21 @@ public class Game
         return null;
     }
 
-    public void moveEntity(MovableEntity entity)
+    public void moveEntity(MovableEntity entity, Position nextPos)
     {
+        boolean wasActive;
+
         // removeIf iterates over the list behind the scenes
         synchronized (activeEntities)
         {
-            activeEntities.removeIf(e -> e.getId() == entity.getId());
+            wasActive = activeEntities.removeIf(e -> e.getId() == entity.getId());
         }
 
-        activeEntities.add(entity); // synchronizedList
-        updateBoard();
+        if(wasActive)
+        {
+            activeEntities.add(entity); // synchronizedList
+            updateBoard();
+        }
     }
 
     public void removeEntity(MovableEntity entity)
@@ -76,10 +79,13 @@ public class Game
         updateBoard();
     }
 
-    /**
+    /*
      * Misc Helpers
      */
 
+    /**
+     * Return a list with any invalid positions (based on board state) removed
+     */
     public List<Position> filterPositions(List<Position> proposedPositions)
     {
         List<Position> acceptedPositions = new LinkedList<>(proposedPositions);

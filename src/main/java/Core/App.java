@@ -1,5 +1,7 @@
 package Core;
 
+import Core.Handlers.*;
+import Interfaces.*;
 import Models.Position;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -49,33 +51,31 @@ public class App extends Application
         btn1.setOnAction((event) ->
         {
             if(running) return;
-            running = true;
 
-            Logger logger = new Logger(textArea);
-
-            Game game = new Game(gridHeight, gridWidth, arena);
-
-            AttackHandler attackHandler = new AttackHandler();
+            LogManager logHandler = new LogHandler(textArea);
+            GameManager boardHandler = new GameHandler(gridHeight, gridWidth, arena);
+            ScoreManager scoreHandler = new ScoreHandler(scoreAmountLabel);
+            AttackManager attackHandler = new AttackHandler(logHandler, boardHandler, scoreHandler);
+            MovementManagerFactory moverFactory = new MovementHandlerFactory(boardHandler);
             arena.addSquareClickedListener(attackHandler);
 
-            EntityCreator spawnHandler = new EntityCreator(spawns, game::filterPositions);
+            SpawnHandler spawnHandler = new SpawnHandler(logHandler, boardHandler, spawns);
 
-            ScoreHandler scoreHandler = new ScoreHandler(scoreAmountLabel);
-
-            threadScheduler = new ThreadScheduler(logger, game, attackHandler, spawnHandler, scoreHandler);
+            threadScheduler = new ThreadScheduler(boardHandler, attackHandler, spawnHandler, scoreHandler, moverFactory);
 
             gameThread = Executors.newSingleThreadExecutor();
             gameThread.execute(threadScheduler);
+            running = true;
         });
 
         btn2.setOnAction((event) ->
         {
             if(!running) return;
-            running = false;
 
             arena.clearListeners();
             threadScheduler.stop();
             gameThread.shutdown();
+            running = false;
         });
 
         SplitPane splitPane = new SplitPane();

@@ -1,7 +1,8 @@
-package Core;
+package Core.Handlers;
 
-import Interfaces.MoveEntity;
-import Interfaces.FilterPositions;
+import Interfaces.BoardManager;
+import Interfaces.MovementManager;
+
 import Models.MovableEntity;
 import Models.Position;
 
@@ -12,30 +13,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class EntityMover implements Runnable
+public class MovementHandler implements MovementManager
 {
-    private final FilterPositions filter;
-    private final MoveEntity mover;
-    private MovableEntity movableEntity;
+    private final BoardManager board;
+    private MovableEntity entity;
 
-    public EntityMover(MovableEntity movableEntity, FilterPositions filter, MoveEntity mover)
+    public MovementHandler(MovableEntity entity, BoardManager board)
     {
-        this.movableEntity = movableEntity;
-        this.mover = mover;
-        this.filter = filter;
+        this.entity = entity;
+        this.board = board;
     }
 
-    @Override
-    public void run()
+    public void move()
     {
         try
         {
-            Position currentPos = movableEntity.getPosition();
+            Position currentPos = entity.getPosition();
             Position previousPos = new Position(currentPos.getX(), currentPos.getY());
             List<Position> allowedMoves = getPossibleMoves(currentPos);
             if(allowedMoves.size() > 0)  moveEntity(previousPos, allowedMoves);
         }
-        catch (InterruptedException e) { /* Shutting down... */ }
+        catch (InterruptedException e) { /* Shutting down mover... */ }
     }
 
     private List<Position> getPossibleMoves(Position currentPosition)
@@ -48,29 +46,31 @@ public class EntityMover implements Runnable
         possibleMoves.add(new Position(currX, currY.add(BigDecimal.ONE)));
         possibleMoves.add(new Position(currX, currY.subtract(BigDecimal.ONE)));
 
-        return filter.filter(Collections.unmodifiableList(possibleMoves));
+        return board.filterPositions(Collections.unmodifiableList(possibleMoves));
     }
 
     private void moveEntity(Position previousPos, List<Position> allowedMoves) throws InterruptedException
     {
+        final int NUM_FRAMES = 10;
+
         // The number to increment the current position by is equal to
-        // (finalPos - originalPos) / 10, rounded to 1 decimal place.
+        // (finalPos - originalPos) / NUM_FRAMES, rounded to 1 decimal place.
         Position finalPos = allowedMoves.get(ThreadLocalRandom.current().nextInt(allowedMoves.size()));
         BigDecimal xInc = (finalPos.getX().subtract(previousPos.getX()))
-                .divide(BigDecimal.TEN, 1, RoundingMode.HALF_EVEN);
+                .divide(new BigDecimal(NUM_FRAMES), 1, RoundingMode.HALF_EVEN);
         BigDecimal yInc = (finalPos.getY().subtract(previousPos.getY()))
-                .divide(BigDecimal.TEN, 1, RoundingMode.HALF_EVEN);
+                .divide(new BigDecimal(NUM_FRAMES), 1, RoundingMode.HALF_EVEN);
 
-        for(int ii = 0; ii < 10; ii++)
+        for(int ii = 0; ii < NUM_FRAMES; ii++)
         {
             long start = System.currentTimeMillis();
-            Position currentPos = movableEntity.getPosition();
+            Position currentPos = entity.getPosition();
+            Position nextPos = new Position(currentPos.getX().add(xInc), currentPos.getY().add(yInc));
 
             // Because Entity is immutable, in order to "move" an entity, the existing
             // entity is replaced with a new one that has a slightly different position
-            Position nextPos = new Position(currentPos.getX().add(xInc), currentPos.getY().add(yInc));
-            movableEntity = new MovableEntity(movableEntity.getId(), movableEntity.getImage(), nextPos, movableEntity.getDelayInMillis());
-            mover.move(movableEntity);
+            entity = new MovableEntity(entity.getId(), entity.getImage(), nextPos, entity.getDelayInMillis());
+            board.moveEntity(entity, nextPos);
             long runTime = Math.abs(System.currentTimeMillis() - start);
 
             Thread.sleep(50 - runTime);

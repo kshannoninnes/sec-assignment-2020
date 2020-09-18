@@ -2,8 +2,10 @@ package Core;
 
 import Interfaces.ArenaListener;
 import Interfaces.UserInterface;
+
 import Models.Entity;
 import Models.Position;
+
 import javafx.scene.canvas.*;
 import javafx.geometry.VPos;
 import javafx.scene.image.Image;
@@ -18,13 +20,11 @@ import java.util.*;
  */
 public class JFXArena extends Pane implements UserInterface
 {
-    // The following values are arbitrary, and you may need to modify them according to the 
-    // requirements of your application.
-    private int gridWidth;
-    private int gridHeight ;
+    private final int gridWidth;
+    private final int gridHeight;
+    private final Canvas canvas;
 
     private double gridSquareSize; // Auto-calculated
-    private Canvas canvas; // Used to provide a 'drawing surface'.
 
     private List<ArenaListener> listeners = null;
     private List<Entity> activeEntities;

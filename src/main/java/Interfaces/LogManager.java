@@ -1,7 +1,7 @@
 package Interfaces;
 
 @FunctionalInterface
-public interface Log
+public interface LogManager
 {
     void log(String text);
 }
