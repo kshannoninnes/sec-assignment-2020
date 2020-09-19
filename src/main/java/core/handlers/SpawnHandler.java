@@ -1,10 +1,11 @@
-package Core.Handlers;
+package core.handlers;
 
-import Interfaces.BoardManager;
-import Interfaces.LogManager;
-import Interfaces.SpawnManager;
-import Models.MovableEntity;
-import Models.Position;
+import interfaces.BoardManager;
+import interfaces.LogManager;
+import interfaces.SpawnManager;
+import models.Entity;
+import models.MovableEntity;
+import models.Position;
 import javafx.scene.image.Image;
 
 import java.io.InputStream;
@@ -15,33 +16,32 @@ import java.util.concurrent.*;
 public class SpawnHandler implements SpawnManager
 {
     private final String IMAGE_FILE = "redsphere.png";
+    private final List<Position> spawnLocations;
     private final int DELAY_UPPER_BOUND = 2000;
     private final int DELAY_LOWER_BOUND = 500;
 
     private int id;
     private final Image entityImage;
-    private final List<Position> spawnLocations;
 
     private final BoardManager board;
     private final LogManager logger;
 
     public SpawnHandler(LogManager logger, BoardManager board, List<Position> spawnLocations)
     {
-        this.logger = logger;
         this.id = 1;
+        this.logger = logger;
+        this.board = board;
         this.spawnLocations = spawnLocations;
         this.entityImage = createImage();
-
-        this.board = board;
     }
 
-    public MovableEntity spawnEntity()
+    public Entity spawnEntity()
     {
         Position spawnLocation = getSpawnLocation();
         if(spawnLocation == null) return null;
 
         int randomDelay = ThreadLocalRandom.current().nextInt(DELAY_LOWER_BOUND, DELAY_UPPER_BOUND);
-        MovableEntity newEntity = new MovableEntity(id++, entityImage, spawnLocation, randomDelay);
+        Entity newEntity = new MovableEntity(id++, entityImage, spawnLocation, randomDelay);
         board.addEntity(newEntity);
         logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
 

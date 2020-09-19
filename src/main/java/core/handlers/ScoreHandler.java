@@ -1,9 +1,9 @@
-package Core.Handlers;
+package core.handlers;
 
-import Interfaces.ScoreManager;
+import interfaces.ScoreManager;
 
-import Models.MovableEntity;
-import Models.FireCommand;
+import models.Entity;
+import models.FireCommand;
 
 import javafx.application.Platform;
 import javafx.scene.control.Label;
@@ -33,7 +33,7 @@ public class ScoreHandler implements ScoreManager
         updateScore();
     }
 
-    public int enemyKilled(MovableEntity enemyKilled, FireCommand killingShot)
+    public int enemyKilled(Entity enemyKilled, FireCommand killingShot)
     {
         long delayBonus = Math.abs(System.currentTimeMillis() - killingShot.getTimeInitiated());
         int enemyKilledBonus = SCORE_INCREMENT + (100 * (int)(delayBonus / enemyKilled.getDelayInMillis()));

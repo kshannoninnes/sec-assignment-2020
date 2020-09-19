@@ -1,10 +1,12 @@
-package Core.Handlers;
+package core.handlers;
 
-import Interfaces.GameManager;
-import Interfaces.UserInterface;
+import interfaces.GameManager;
+import interfaces.ThreadManager;
+import interfaces.UserInterface;
+import interfaces.LossChecker;
 
-import Models.MovableEntity;
-import Models.Position;
+import models.Entity;
+import models.Position;
 
 import javafx.application.Platform;
 import java.math.BigDecimal;
@@ -15,39 +17,61 @@ public class GameHandler implements GameManager
     private final int gridHeight;
     private final int gridWidth;
     private final UserInterface ui;
-    private final List<MovableEntity> activeEntities;
 
-    // TODO !!!!!!!! Make win condition !!!!!!!!
-    public GameHandler(int gridHeight, int gridWidth, UserInterface ui)
+    private final List<Entity> activeEntities;
+
+    private final LossChecker lossChecker;
+    private ThreadManager threadHandler;
+
+
+    public GameHandler(int gridHeight, int gridWidth, UserInterface ui, LossChecker lossChecker)
     {
         this.gridHeight = gridHeight;
         this.gridWidth = gridWidth;
         this.ui = ui;
 
         this.activeEntities = Collections.synchronizedList(new LinkedList<>());
+
+        this.lossChecker = lossChecker;
     }
 
-    public void shutdown()
+    /*
+     * GameManager methods
+     */
+
+    public void start()
     {
+        if(threadHandler == null) throw new IllegalStateException("GameHandler needs a ThreadHandler!");
+        threadHandler.start();
+    }
+
+    public void stop()
+    {
+        endGame();
         activeEntities.clear();
         updateBoard();
     }
 
+    public void setThreadHandler(ThreadManager threadHandler)
+    {
+        this.threadHandler = threadHandler;
+    }
+
     /*
-     * Entity Manipulation
+     * BoardManager methods
      */
 
-    public void addEntity(MovableEntity entity)
+    public void addEntity(Entity entity)
     {
         activeEntities.add(entity); // synchronizedList
         updateBoard();
     }
 
-    public MovableEntity findEntity(Position position)
+    public Entity findEntity(Position position)
     {
         synchronized (activeEntities)
         {
-            for(MovableEntity e : activeEntities)
+            for(Entity e : activeEntities)
             {
                 if(e.getPosition().equals(position)) return e;
             }
@@ -56,7 +80,7 @@ public class GameHandler implements GameManager
         return null;
     }
 
-    public void moveEntity(MovableEntity entity, Position nextPos)
+    public void moveEntity(Entity entity)
     {
         boolean wasActive;
 
@@ -70,18 +94,16 @@ public class GameHandler implements GameManager
         {
             activeEntities.add(entity); // synchronizedList
             updateBoard();
+
+            if(lossChecker.isGameOver(entity)) endGame();
         }
     }
 
-    public void removeEntity(MovableEntity entity)
+    public void removeEntity(Entity entity)
     {
         activeEntities.remove(entity); // synchronizedList
         updateBoard();
     }
-
-    /*
-     * Misc Helpers
-     */
 
     /**
      * Return a list with any invalid positions (based on board state) removed
@@ -93,7 +115,7 @@ public class GameHandler implements GameManager
         {
             synchronized (activeEntities)
             {
-                for (MovableEntity activeEntity : activeEntities)
+                for (Entity activeEntity : activeEntities)
                     if (activeEntity.getPosition().equals(proposedPosition))
                         acceptedPositions.remove(proposedPosition);
             }
@@ -110,8 +132,17 @@ public class GameHandler implements GameManager
         return Collections.unmodifiableList(acceptedPositions);
     }
 
+    /*
+     * Private methods
+     */
+
     private void updateBoard()
     {
         Platform.runLater(() -> ui.renderEntities(new ArrayList<>(activeEntities)));
+    }
+
+    private void endGame()
+    {
+        threadHandler.stop();
     }
 }

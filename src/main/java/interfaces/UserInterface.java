@@ -1,6 +1,6 @@
-package Interfaces;
+package interfaces;
 
-import Models.Entity;
+import models.Entity;
 
 import java.util.List;
 

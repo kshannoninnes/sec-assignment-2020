@@ -1,12 +1,12 @@
-package Core;
+package core;
 
-import Interfaces.BoardManager;
-import Interfaces.MovementManager;
-import Interfaces.MovementManagerFactory;
+import interfaces.BoardManager;
+import interfaces.MovementManager;
+import interfaces.MovementManagerFactory;
 
-import Models.MovableEntity;
+import models.Entity;
 
-import Core.Handlers.MovementHandler;
+import core.handlers.MovementHandler;
 
 public class MovementHandlerFactory implements MovementManagerFactory
 {
@@ -18,7 +18,7 @@ public class MovementHandlerFactory implements MovementManagerFactory
     }
 
     @Override
-    public MovementManager createMover(MovableEntity entity)
+    public MovementManager createMover(Entity entity)
     {
         return new MovementHandler(entity, board);
     }

@@ -1,4 +1,4 @@
-package Models;
+package models;
 
 import javafx.scene.image.Image;
 
@@ -31,5 +31,5 @@ public abstract class Entity
         return position;
     }
 
-    abstract int getDelayInMillis();
+    public abstract int getDelayInMillis();
 }

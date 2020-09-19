@@ -1,4 +1,4 @@
-package Models;
+package models;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,7 +29,7 @@ public class Position
     }
 
     /**
-     * Two Positions are considered equal if the whole integer floor of both of them are equal
+     * Two Positions are generally considered equal if the difference between them is less than 1
      */
     @Override
     public boolean equals(Object obj)
@@ -44,6 +44,19 @@ public class Position
 
         boolean xEqual = xDiff.setScale(0, RoundingMode.FLOOR).compareTo(BigDecimal.ONE) < 0;
         boolean yEqual = yDiff.setScale(0, RoundingMode.FLOOR).compareTo(BigDecimal.ONE) < 0;
+
+        return xEqual && yEqual;
+    }
+
+    public boolean exactEquals(Object obj)
+    {
+        if(obj == this) return true;
+        if(!(obj instanceof Position)) return false;
+
+        Position p = (Position)obj;
+
+        boolean xEqual = p.getX().setScale(1, RoundingMode.HALF_EVEN).equals(this.getX());
+        boolean yEqual = p.getY().setScale(1, RoundingMode.HALF_EVEN).equals(this.getY());
 
         return xEqual && yEqual;
     }

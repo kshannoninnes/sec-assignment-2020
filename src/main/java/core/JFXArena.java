@@ -1,10 +1,10 @@
-package Core;
+package core;
 
-import Interfaces.ArenaListener;
-import Interfaces.UserInterface;
+import interfaces.ArenaListener;
+import interfaces.UserInterface;
 
-import Models.Entity;
-import Models.Position;
+import models.Entity;
+import models.Position;
 
 import javafx.scene.canvas.*;
 import javafx.geometry.VPos;

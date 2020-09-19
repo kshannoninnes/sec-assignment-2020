@@ -1,19 +1,16 @@
-package Core;
+package core;
 
-import Interfaces.*;
+import interfaces.*;
 
-import Models.Entity;
-import Models.MovableEntity;
+import models.Entity;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class ThreadScheduler implements Runnable
+public class ThreadScheduler implements ThreadManager
 {
-    private final GameManager boardHandler;
-
     private final AttackManager attackHandler;
     private final ScheduledExecutorService attackExecutor;
 
@@ -25,43 +22,58 @@ public class ThreadScheduler implements Runnable
 
     private final MovementManagerFactory moverFactory;
     private final Map<String, Future<?>> moveFutures;
-    private final ScheduledExecutorService moveExecutor;
+    private final ScheduledThreadPoolExecutor moveExecutor;
 
-    public ThreadScheduler(GameManager boardHandler, AttackManager attackHandler,
-                           SpawnManager spawnHandler, ScoreManager scoreHandler,
+    private final ExecutorService selfExecutor;
+
+    public ThreadScheduler(ScoreManager scoreHandler, AttackManager attackHandler, SpawnManager spawnHandler,
                            MovementManagerFactory moverFactory)
     {
-        this.boardHandler = boardHandler;
+        this.scoreHandler = scoreHandler;
+        this.scoreExecutor = Executors.newSingleThreadScheduledExecutor();
 
         this.attackHandler = attackHandler;
         this.attackExecutor = Executors.newSingleThreadScheduledExecutor();
-
-        this.scoreHandler = scoreHandler;
-        this.scoreExecutor = Executors.newSingleThreadScheduledExecutor();
 
         this.spawnHandler = spawnHandler;
         this.spawnExecutor = Executors.newSingleThreadScheduledExecutor();
 
         this.moverFactory = moverFactory;
         this.moveFutures = Collections.synchronizedMap(new HashMap<>());
-        this.moveExecutor = Executors.newScheduledThreadPool(20);
+        this.moveExecutor = new ScheduledThreadPoolExecutor(20);
+
+        this.selfExecutor = Executors.newSingleThreadExecutor();
     }
 
-    @Override
-    public void run()
+    public void start()
     {
-        createScoreScheduler();
-        createAttackScheduler();
-        createSpawnScheduler();
+        // ThreadHandler looks after its own thread, rather than being a Runnable itself
+        Runnable scheduleTask = () ->
+        {
+            createScoreScheduler();
+            createAttackScheduler();
+            createSpawnScheduler();
+        };
+
+        selfExecutor.execute(scheduleTask);
     }
 
     public void stop()
     {
-        scoreExecutor.shutdownNow();
-        attackExecutor.shutdownNow();
-        spawnExecutor.shutdownNow();
-        moveExecutor.shutdownNow();
-        boardHandler.shutdown();
+        try
+        {
+            scoreExecutor.shutdownNow();
+            attackExecutor.shutdownNow();
+            spawnExecutor.shutdownNow();
+            moveExecutor.shutdown();
+            moveExecutor.awaitTermination(3000, TimeUnit.MILLISECONDS);
+            selfExecutor.shutdownNow();
+
+        } catch (InterruptedException e)
+        {
+            System.out.println("Shutdown was interrupted!\n");
+            e.printStackTrace();
+        }
     }
 
     private void createScoreScheduler()
@@ -88,21 +100,21 @@ public class ThreadScheduler implements Runnable
     {
         Runnable spawnTask = () ->
         {
-            MovableEntity entity = spawnHandler.spawnEntity();
+            Entity entity = spawnHandler.spawnEntity();
             if(entity == null) return;
 
             createMoveScheduler(entity);
         };
 
-        spawnExecutor.scheduleAtFixedRate(spawnTask, 0, 2000, TimeUnit.MILLISECONDS);
+        spawnExecutor.scheduleWithFixedDelay(spawnTask, 0, 2000, TimeUnit.MILLISECONDS);
     }
 
-    private void createMoveScheduler(MovableEntity entity)
+    private void createMoveScheduler(Entity entity)
     {
         MovementManager entityMover = moverFactory.createMover(entity);
         long delay = entity.getDelayInMillis();
 
-        ScheduledFuture<?> future = moveExecutor.scheduleAtFixedRate(entityMover::move, delay, delay, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = moveExecutor.scheduleWithFixedDelay(entityMover::move, delay, delay, TimeUnit.MILLISECONDS);
         moveFutures.put(String.valueOf(entity.getId()), future);
     }
 }

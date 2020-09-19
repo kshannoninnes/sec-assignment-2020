@@ -1,14 +1,13 @@
-package Core.Handlers;
+package core.handlers;
 
-import Interfaces.AttackManager;
-import Interfaces.BoardManager;
-import Interfaces.LogManager;
-import Interfaces.ScoreManager;
+import interfaces.AttackManager;
+import interfaces.BoardManager;
+import interfaces.LogManager;
+import interfaces.ScoreManager;
 
-import Models.Entity;
-import Models.FireCommand;
-import Models.MovableEntity;
-import Models.Position;
+import models.Entity;
+import models.FireCommand;
+import models.Position;
 
 import java.math.BigDecimal;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,7 +35,7 @@ public class AttackHandler implements AttackManager
             FireCommand fireCommand = getFireCommand();
             if (fireCommand != null)
             {
-                MovableEntity destroyedEntity = board.findEntity(fireCommand.getAttackLocation());
+                Entity destroyedEntity = board.findEntity(fireCommand.getAttackLocation());
                 int x = fireCommand.getAttackLocation().getX().intValue();
                 int y = fireCommand.getAttackLocation().getY().intValue();
 

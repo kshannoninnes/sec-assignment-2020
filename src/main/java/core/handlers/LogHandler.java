@@ -1,6 +1,6 @@
-package Core.Handlers;
+package core.handlers;
 
-import Interfaces.LogManager;
+import interfaces.LogManager;
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
