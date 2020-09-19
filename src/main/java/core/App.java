@@ -61,7 +61,7 @@ public class App extends Application
         {
             if(running) return;
 
-            LossChecker winChecker = new SingleLosingPosition(winningPosition);
+            LossManager winChecker = new SingleLosingPosition(winningPosition);
             game = new GameHandler(gridHeight, gridWidth, arena, winChecker);
 
             LogManager logHandler = new LogHandler(textArea);

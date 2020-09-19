@@ -1,10 +1,10 @@
 package core.handlers;
 
-import interfaces.LossChecker;
+import interfaces.LossManager;
 import models.Entity;
 import models.Position;
 
-public class SingleLosingPosition implements LossChecker
+public class SingleLosingPosition implements LossManager
 {
     private final Position winningPosition;
 

@@ -4,7 +4,6 @@ import interfaces.BoardManager;
 import interfaces.LogManager;
 import interfaces.SpawnManager;
 import models.Entity;
-import models.MovableEntity;
 import models.Position;
 import javafx.scene.image.Image;
 
@@ -41,7 +40,7 @@ public class SpawnHandler implements SpawnManager
         if(spawnLocation == null) return null;
 
         int randomDelay = ThreadLocalRandom.current().nextInt(DELAY_LOWER_BOUND, DELAY_UPPER_BOUND);
-        Entity newEntity = new MovableEntity(id++, entityImage, spawnLocation, randomDelay);
+        Entity newEntity = new Entity(id++, entityImage, spawnLocation, randomDelay);
         board.addEntity(newEntity);
         logger.log(String.format("Entity #%d spawned with delay %d.", newEntity.getId(), newEntity.getDelayInMillis()));
 

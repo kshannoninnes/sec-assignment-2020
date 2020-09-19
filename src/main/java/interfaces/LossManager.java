@@ -2,7 +2,7 @@ package interfaces;
 
 import models.Entity;
 
-public interface LossChecker
+public interface LossManager
 {
     boolean isGameOver(Entity entity);
 }

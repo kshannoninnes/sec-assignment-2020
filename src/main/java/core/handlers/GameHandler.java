@@ -3,7 +3,7 @@ package core.handlers;
 import interfaces.GameManager;
 import interfaces.ThreadManager;
 import interfaces.UserInterface;
-import interfaces.LossChecker;
+import interfaces.LossManager;
 
 import models.Entity;
 import models.Position;
@@ -20,11 +20,11 @@ public class GameHandler implements GameManager
 
     private final List<Entity> activeEntities;
 
-    private final LossChecker lossChecker;
+    private final LossManager lossHandler;
     private ThreadManager threadHandler;
 
 
-    public GameHandler(int gridHeight, int gridWidth, UserInterface ui, LossChecker lossChecker)
+    public GameHandler(int gridHeight, int gridWidth, UserInterface ui, LossManager lossHandler)
     {
         this.gridHeight = gridHeight;
         this.gridWidth = gridWidth;
@@ -32,7 +32,7 @@ public class GameHandler implements GameManager
 
         this.activeEntities = Collections.synchronizedList(new LinkedList<>());
 
-        this.lossChecker = lossChecker;
+        this.lossHandler = lossHandler;
     }
 
     /*
@@ -95,7 +95,7 @@ public class GameHandler implements GameManager
             activeEntities.add(entity); // synchronizedList
             updateBoard();
 
-            if(lossChecker.isGameOver(entity)) endGame();
+            if(lossHandler.isGameOver(entity)) endGame();
         }
     }
 

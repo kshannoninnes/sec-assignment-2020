@@ -4,7 +4,6 @@ import interfaces.BoardManager;
 import interfaces.MovementManager;
 
 import models.Entity;
-import models.MovableEntity;
 import models.Position;
 
 import java.math.BigDecimal;
@@ -78,7 +77,7 @@ public class MovementHandler implements MovementManager
 
             // Because Entity is immutable, in order to "move" an entity, the existing
             // entity is replaced with a new one that has a slightly different position
-            entity = new MovableEntity(entity.getId(), entity.getImage(), nextPos, entity.getDelayInMillis());
+            entity = new Entity(entity.getId(), entity.getImage(), nextPos, entity.getDelayInMillis());
             board.moveEntity(entity);
             long runTime = Math.abs(System.currentTimeMillis() - start);
 

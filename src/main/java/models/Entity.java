@@ -2,18 +2,20 @@ package models;
 
 import javafx.scene.image.Image;
 
-public abstract class Entity
+public class Entity
 {
     private final int id;
     private final Image image;
     private final Position position;
+    private final int delayInMillis;
 
-    public Entity(int id, Image image, Position position)
+    public Entity(int id, Image image, Position position, int delayInMillis)
     {
 
         this.id = id;
         this.image = image;
         this.position = position;
+        this.delayInMillis = delayInMillis;
     }
 
     public int getId()
@@ -31,5 +33,8 @@ public abstract class Entity
         return position;
     }
 
-    public abstract int getDelayInMillis();
+    public int getDelayInMillis()
+    {
+        return delayInMillis;
+    }
 }
