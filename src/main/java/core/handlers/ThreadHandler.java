@@ -1,4 +1,4 @@
-package core;
+package core.handlers;
 
 import interfaces.*;
 
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class ThreadScheduler implements ThreadManager
+public class ThreadHandler implements ThreadManager
 {
     private final AttackManager attackHandler;
     private final ScheduledExecutorService attackExecutor;
@@ -26,8 +26,8 @@ public class ThreadScheduler implements ThreadManager
 
     private final ExecutorService selfExecutor;
 
-    public ThreadScheduler(ScoreManager scoreHandler, AttackManager attackHandler, SpawnManager spawnHandler,
-                           MovementManagerFactory moverFactory)
+    public ThreadHandler(ScoreManager scoreHandler, AttackManager attackHandler, SpawnManager spawnHandler,
+                         MovementManagerFactory moverFactory)
     {
         this.scoreHandler = scoreHandler;
         this.scoreExecutor = Executors.newSingleThreadScheduledExecutor();

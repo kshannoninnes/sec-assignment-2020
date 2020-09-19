@@ -2,6 +2,9 @@ package models;
 
 import javafx.scene.image.Image;
 
+/**
+ * Immutable object to represent an entity within the game
+ */
 public class Entity
 {
     private final int id;

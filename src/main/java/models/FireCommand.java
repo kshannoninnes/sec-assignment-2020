@@ -1,5 +1,8 @@
 package models;
 
+/**
+ * Immutable object to represent a command from the player to fire on a position
+ */
 public class FireCommand
 {
     private final long timeInitiated;

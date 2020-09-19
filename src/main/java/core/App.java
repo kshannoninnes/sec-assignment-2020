@@ -71,8 +71,8 @@ public class App extends Application
             MovementManagerFactory moverFactory = new MovementHandlerFactory(game);
             arena.addSquareClickedListener(attackHandler);
 
-            ThreadScheduler threadScheduler = new ThreadScheduler(scoreHandler, attackHandler, spawnHandler, moverFactory);
-            game.setThreadHandler(threadScheduler);
+            ThreadHandler threadHandler = new ThreadHandler(scoreHandler, attackHandler, spawnHandler, moverFactory);
+            game.setThreadHandler(threadHandler);
 
             game.start();
             running = true;
