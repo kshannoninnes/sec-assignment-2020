@@ -47,9 +47,9 @@ public class GameHandler implements GameManager
 
     public void stop()
     {
-        endGame();
         activeEntities.clear();
         updateBoard();
+        endGame();
     }
 
     public void setThreadHandler(ThreadManager threadHandler)

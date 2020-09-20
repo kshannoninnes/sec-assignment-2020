@@ -34,13 +34,13 @@ public class App extends Application
         SplitPane splitPane = new SplitPane();
         BorderPane contentPane = new BorderPane();
 
-        JFXArena arena = new JFXArena(gridHeight, gridWidth);
         Button btn1 = new Button("Start");
         Button btn2 = new Button("Stop");
         Label scoreLabel = new Label("Score: ");
-        Label scoreAmountLabel = new Label("0");
+        Label scoreValueLabel = new Label("0");
+        JFXArena arena = new JFXArena(gridHeight, gridWidth, scoreValueLabel);
 
-        toolbar.getItems().addAll(btn1, btn2, scoreLabel, scoreAmountLabel);
+        toolbar.getItems().addAll(btn1, btn2, scoreLabel, scoreValueLabel);
         splitPane.getItems().addAll(arena, textArea);
         arena.setMinWidth(300.0);
         contentPane.setTop(toolbar);
@@ -65,7 +65,7 @@ public class App extends Application
             game = new GameHandler(gridHeight, gridWidth, arena, winChecker);
 
             LogManager logHandler = new LogHandler(textArea);
-            ScoreManager scoreHandler = new ScoreHandler(scoreAmountLabel);
+            ScoreManager scoreHandler = new ScoreHandler(arena);
             SpawnHandler spawnHandler = new SpawnHandler(logHandler, game, spawns);
             AttackManager attackHandler = new AttackHandler(logHandler, game, scoreHandler);
             MovementManagerFactory moverFactory = new MovementHandlerFactory(game);

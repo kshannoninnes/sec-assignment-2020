@@ -35,15 +35,16 @@ public class AttackHandler implements AttackManager
             FireCommand fireCommand = getFireCommand();
             if (fireCommand != null)
             {
-                Entity destroyedEntity = board.findEntity(fireCommand.getAttackLocation());
                 int x = fireCommand.getAttackLocation().getX().intValue();
                 int y = fireCommand.getAttackLocation().getY().intValue();
+                Entity destroyedEntity = board.findEntity(fireCommand.getAttackLocation());
 
                 String message;
                 if (destroyedEntity != null)
                 {
-                    board.removeEntity(destroyedEntity);
                     int scoreGained = scoreboard.enemyKilled(destroyedEntity, fireCommand);
+                    board.removeEntity(destroyedEntity);
+
                     message = String.format("Attack on [%d, %d] hits entity #%d for a bonus score of %d.", x, y, destroyedEntity.getId(), scoreGained);
                 } else
                 {

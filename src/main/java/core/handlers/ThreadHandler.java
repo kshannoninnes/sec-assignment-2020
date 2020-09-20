@@ -22,7 +22,7 @@ public class ThreadHandler implements ThreadManager
 
     private final MovementManagerFactory moverFactory;
     private final Map<String, Future<?>> moveFutures;
-    private final ScheduledThreadPoolExecutor moveExecutor;
+    private final ScheduledExecutorService moveExecutor;
 
     private final ExecutorService selfExecutor;
 
@@ -40,7 +40,7 @@ public class ThreadHandler implements ThreadManager
 
         this.moverFactory = moverFactory;
         this.moveFutures = Collections.synchronizedMap(new HashMap<>());
-        this.moveExecutor = new ScheduledThreadPoolExecutor(20);
+        this.moveExecutor = Executors.newScheduledThreadPool(20);
 
         this.selfExecutor = Executors.newSingleThreadExecutor();
     }
@@ -62,12 +62,12 @@ public class ThreadHandler implements ThreadManager
     {
         try
         {
-            scoreExecutor.shutdownNow();
-            attackExecutor.shutdownNow();
-            spawnExecutor.shutdownNow();
+            scoreExecutor.shutdown();
+            attackExecutor.shutdown();
+            spawnExecutor.shutdown();
             moveExecutor.shutdown();
             moveExecutor.awaitTermination(3000, TimeUnit.MILLISECONDS);
-            selfExecutor.shutdownNow();
+            selfExecutor.shutdown();
 
         } catch (InterruptedException e)
         {

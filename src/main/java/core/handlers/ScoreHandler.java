@@ -1,24 +1,22 @@
 package core.handlers;
 
 import interfaces.ScoreManager;
+import interfaces.UserInterface;
 
 import models.Entity;
 import models.FireCommand;
-
-import javafx.application.Platform;
-import javafx.scene.control.Label;
 
 public class ScoreHandler implements ScoreManager
 {
     private final Object mutex = new Object();
     private final int SCORE_INCREMENT = 10;
-    private final Label scoreDisplay;
+    private final UserInterface ui;
 
     private int score;
 
-    public ScoreHandler(Label scoreDisplay)
+    public ScoreHandler(UserInterface ui)
     {
-        this.scoreDisplay = scoreDisplay;
+        this.ui = ui;
         this.score = 0;
         updateScore();
     }
@@ -54,6 +52,6 @@ public class ScoreHandler implements ScoreManager
             scoreText = String.valueOf(score);
         }
 
-        Platform.runLater(() -> scoreDisplay.setText(scoreText));
+        ui.updateScore(scoreText);
     }
 }

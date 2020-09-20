@@ -7,4 +7,5 @@ import java.util.List;
 public interface UserInterface
 {
     void renderEntities(List<Entity> entities);
+    void updateScore(String score);
 }

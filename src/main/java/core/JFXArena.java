@@ -3,6 +3,8 @@ package core;
 import interfaces.ArenaListener;
 import interfaces.UserInterface;
 
+import javafx.application.Platform;
+import javafx.scene.control.Label;
 import models.Entity;
 import models.Position;
 
@@ -20,29 +22,31 @@ import java.util.*;
  */
 public class JFXArena extends Pane implements UserInterface
 {
+    private final Canvas canvas;
+    private List<ArenaListener> listeners = null;
+
     private final int gridWidth;
     private final int gridHeight;
-    private final Canvas canvas;
-
     private double gridSquareSize; // Auto-calculated
 
-    private List<ArenaListener> listeners = null;
     private List<Entity> activeEntities;
+    private final Label scoreValueLabel;
     
     /**
      * Creates a new arena object, loading the robot image and initialising a drawing surface.
      */
-    public JFXArena(int gridHeight, int gridWidth)
+    public JFXArena(int gridHeight, int gridWidth, Label scoreValueLabel)
     {
-        this.gridHeight = gridHeight;
-        this.gridWidth = gridWidth;
-        
         canvas = new Canvas();
         canvas.widthProperty().bind(widthProperty());
         canvas.heightProperty().bind(heightProperty());
         getChildren().add(canvas);
 
+        this.gridHeight = gridHeight;
+        this.gridWidth = gridWidth;
+
         activeEntities = new ArrayList<>();
+        this.scoreValueLabel = scoreValueLabel;
     }
 
     @Override
@@ -50,6 +54,12 @@ public class JFXArena extends Pane implements UserInterface
     {
         activeEntities = entities;
         requestLayout();
+    }
+
+    @Override
+    public void updateScore(String newScore)
+    {
+        Platform.runLater(() -> scoreValueLabel.setText(newScore));
     }
     
     /**
